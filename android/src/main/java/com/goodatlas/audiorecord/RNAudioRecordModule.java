@@ -14,8 +14,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.RandomAccessFile;
 
 public class RNAudioRecordModule extends ReactContextBaseJavaModule {
 
@@ -32,7 +31,6 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
     private int bufferSize;
     private boolean isRecording;
 
-    private String tmpFile;
     private String outFile;
     private Promise stopRecordingPromise;
 
@@ -75,7 +73,6 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
 
         String documentDirectoryPath = getReactApplicationContext().getFilesDir().getAbsolutePath();
         outFile = documentDirectoryPath + "/" + "audio.wav";
-        tmpFile = documentDirectoryPath + "/" + "temp.pcm";
         if (options.hasKey("wavFile")) {
             String fileName = options.getString("wavFile");
             outFile = documentDirectoryPath + "/" + fileName;
@@ -102,8 +99,12 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
                     int count = 0;
                     String base64Data;
                     byte[] buffer = new byte[bufferSize];
-                    FileOutputStream os = new FileOutputStream(tmpFile);
 
+                    File file = new File(outFile);
+                    if(file.exists()) file.delete();
+                    RandomAccessFile os = new RandomAccessFile(outFile, "rw");
+                    os.Write(buffer, 44);
+                    long totalAudioLen = 0;
                     while (isRecording) {
                         bytesRead = recorder.read(buffer, 0, buffer.length);
 
@@ -112,12 +113,13 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
                             base64Data = Base64.encodeToString(buffer, Base64.NO_WRAP);
                             eventEmitter.emit("data", base64Data);
                             os.write(buffer, 0, bytesRead);
+                            totalAudioLen += bytesRead;
                         }
                     }
 
+                    addWavHeader(os, totalAudioLen, totalAudioLen + 36);
                     recorder.stop();
                     os.close();
-                    saveAsWav();
                     stopRecordingPromise.resolve(outFile);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -134,32 +136,7 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
         stopRecordingPromise = promise;
     }
 
-    private void saveAsWav() {
-        try {
-            FileInputStream in = new FileInputStream(tmpFile);
-            FileOutputStream out = new FileOutputStream(outFile);
-            long totalAudioLen = in.getChannel().size();;
-            long totalDataLen = totalAudioLen + 36;
-
-            addWavHeader(out, totalAudioLen, totalDataLen);
-
-            byte[] data = new byte[bufferSize];
-            int bytesRead;
-            while ((bytesRead = in.read(data)) != -1) {
-                out.write(data, 0, bytesRead);
-            }
-            Log.d(TAG, "file path:" + outFile);
-            Log.d(TAG, "file size:" + out.getChannel().size());
-
-            in.close();
-            out.close();
-            deleteTempFile();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void addWavHeader(FileOutputStream out, long totalAudioLen, long totalDataLen)
+    private void addWavHeader(RandomAccessFile out, long totalAudioLen, long totalDataLen)
             throws Exception {
 
         long sampleRate = sampleRateInHz;
@@ -215,11 +192,7 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
         header[42] = (byte) ((totalAudioLen >> 16) & 0xff);
         header[43] = (byte) ((totalAudioLen >> 24) & 0xff);
 
+        out.seek(0);
         out.write(header, 0, 44);
-    }
-
-    private void deleteTempFile() {
-        File file = new File(tmpFile);
-        file.delete();
     }
 }
