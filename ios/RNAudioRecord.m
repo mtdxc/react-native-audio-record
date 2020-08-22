@@ -1,4 +1,5 @@
 #import "RNAudioRecord.h"
+#import "../convert/convert.h"
 
 @implementation RNAudioRecord
 
@@ -60,6 +61,23 @@ RCT_EXPORT_METHOD(stop:(RCTPromiseResolveBlock)resolve
     unsigned long long fileSize = [[[NSFileManager defaultManager] attributesOfItemAtPath:_filePath error:nil] fileSize];
     RCTLogInfo(@"file path %@", _filePath);
     RCTLogInfo(@"file size %llu", fileSize);
+}
+
+RCT_EXPORT_METHOD(WavToMp3 : (NSString*) wavpath
+                   mp3Path : (NSString*) mp3path
+                   bitrate : (int) bitrate
+               resolve:(RCTPromiseResolveBlock)resolve
+              rejecter:(__unused RCTPromiseRejectBlock)reject) {
+  int ret = WavToMp3([wavpath UTF8String], [mp3path UTF8String], bitrate);
+  resolve([NSNumber numberWithInt:ret]);
+}
+
+RCT_EXPORT_METHOD(Mp3ToWav : (NSString*) mp3path
+                   mp3Path : (NSString*) wavpath
+               resolve:(RCTPromiseResolveBlock)resolve
+              rejecter:(__unused RCTPromiseRejectBlock)reject) {
+  int ret = Mp3ToWav([mp3path UTF8String], [wavpath UTF8String]);
+  resolve([NSNumber numberWithInt:ret]);
 }
 
 void HandleInputBuffer(void *inUserData,
