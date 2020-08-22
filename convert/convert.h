@@ -11,7 +11,8 @@ bool WavClose(long h);
 
 long Mp3Open(int samplerate, int channels, int bitrate);
 int Mp3SamplePerPass(long h);
-unsigned char* Mp3Encode(long h, short* pcm, int len, int* outlen);
+int Mp3GetChannels(long h);
+unsigned char* Mp3Encode(long h, short* pcm, int* outlen);
 bool Mp3Close(long h);
 
 int WavToMp3(const char* wavPath, const char* mp3Path, int bitrate);

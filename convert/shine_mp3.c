@@ -1356,7 +1356,9 @@ int shine_check_config(int freq, int bitr) {
 int shine_samples_per_pass(shine_t s) {
   return s->mpeg.granules_per_frame * GRANULE_SIZE;
 }
-
+int shine_get_channels(shine_t s){
+  return s->wave.channels;
+}
 /* Compute default encoding values. */
 shine_t shine_initialise(shine_config_t* pub_config) {
   double avg_slots_per_frame;

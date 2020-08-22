@@ -1,5 +1,7 @@
 package com.goodatlas.audiorecord;
 
+import com.goodatlas.audiorecord.AudioConvert;
+
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
@@ -135,7 +137,14 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
         isRecording = false;
         stopRecordingPromise = promise;
     }
-
+    @ReactMethod
+    public void WavToMp3(String wav, String mp3, int bitrate, Promise promise) {
+        promise.resolve(AudioConvert.WavToMp3(wav, mp3, bitrate));
+    }
+    @ReactMethod
+    public void Mp3ToWav(String mp3, String wav, Promise promise) {
+        promise.resolve(AudioConvert.Mp3ToWav(mp3, wav));
+    }
     private void addWavHeader(RandomAccessFile out, long totalAudioLen, long totalDataLen)
             throws Exception {
 

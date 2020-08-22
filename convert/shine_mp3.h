@@ -130,7 +130,7 @@ shine_t shine_initialise(shine_config_t *config);
 
 /* Returns audio samples expected in each frame. */
 int shine_samples_per_pass(shine_t s);
-
+int shine_get_channels(shine_t s);
 /* Encode audio data. Source data must have `shine_samples_per_pass(s)` audio samples per
  * channels. Mono encoder only expect one channel. 
  *

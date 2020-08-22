@@ -136,8 +136,13 @@ int Mp3SamplePerPass(long h) {
   if (!enc) return 0;
   return shine_samples_per_pass(enc);
 }
+int Mp3GetChannels(long h) {
+  shine_t enc = (shine_t)h;
+  if (!enc) return 0;
+  return shine_get_channels(enc);
+}
 
-uint8_t* Mp3Encode(long h, int16_t* pcm, int len, int* outlen) {
+uint8_t* Mp3Encode(long h, int16_t* pcm, int* outlen) {
   shine_t enc = (shine_t)h;
   if (pcm) {
     return shine_encode_buffer_interleaved(enc, pcm, outlen);
@@ -174,14 +179,14 @@ int WavToMp3(const char* wavPath, const char* mp3Path, int bitrate) {
   while (enc) {
     int n = WavRead(wav, &pcm[0], samples_pre_pass);
     if (!n) {
-      mp3_buf = Mp3Encode(enc, NULL, 0, &mp3_size);
+      mp3_buf = Mp3Encode(enc, NULL, &mp3_size);
       if (mp3_buf && mp3_size) {
         fwrite(mp3_buf, 1, mp3_size, fp);
       }
       break;
     }
     ret += n;
-    mp3_buf = Mp3Encode(enc, &pcm[0], pcm.size(), &mp3_size);
+    mp3_buf = Mp3Encode(enc, &pcm[0], &mp3_size);
     if (mp3_buf && mp3_size) {
       fwrite(mp3_buf, 1, mp3_size, fp);
     }
